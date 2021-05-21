@@ -1,0 +1,16 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+.idea
+.vscode
+
+# testing
+/coverage
+
+root.crt
+vcap-local.json
+config.json
+
+/deploy
+debug
+
+*.zip
+IBMCLOUD_APIKEY
