@@ -16,6 +16,7 @@ func main() {
 	}
 
 	scriptOrder := []string{
+		"role", // remove if role already exists
 		"schema",
 		"domains",
 		"functions",
