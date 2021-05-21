@@ -1,0 +1,21 @@
+INSERT INTO {{.TenantID}}.capability (provider_id, capability_id)
+VALUES
+    ('YL', 'deactivate'),
+    ('YL', 'markResolved'),
+    ('YL', 'removeSearch'),
+    ('YL', 'sendReply'),
+    ('YL', 'setFlag'),
+    ('YL', 'resolvedAfterProcessed'),
+    ('YL', 'removeFlag'),
+    ('YL', 'sendMessage'),
+    ('YL', 'markNonIssue'),
+    ('YL', 'reactivate'),
+    ('YL', 'sendMsgAndRemoveFlag'),
+    ('GM', 'reclassifyComment'),
+    ('L1', 'reclassifyComment'),
+    ('SG', 'reclassifyComment'),
+    ('TA', 'reclassifyComment'),
+    ('YL', 'reclassifyComment'),
+    ('API', 'reclassifyComment'),
+    ('NPS', 'reclassifyComment'),
+    ('AF', 'reclassifyFlag');
