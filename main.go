@@ -1,68 +1,98 @@
 package main
 
 import (
-	_ "github.com/lib/pq"
-
 	"context"
 	"fmt"
-	"github.ibm.com/HRLearning/AmplifyApiServer/pkg/database"
+	"github.com/ivansukach/db-data-copy-paste/database"
 	"log"
 )
 
+const tenantID = "ptech"
+
 func main() {
-	config, err := readConfig()
+	configSource, err := readConfig(true)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to read config: %w", err))
+		log.Fatal(fmt.Errorf("failed to read configs: %w", err))
 	}
 
-	scriptOrder := []string{
-		//"role", // remove if role already exists
-		//"schema",
-		//"domains",
-		//"functions",
-		//"sequences",
-		//"tables",
-		//"table-data",
-		//"views",
-		"relations",
-	}
-
-	scriptsByName, err := getAllParsedScripts(scriptOrder, config.ScriptTemplate)
+	configReceiver, err := readConfig(false)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to get all parsed scripts: %w", err))
+		log.Fatal(fmt.Errorf("failed to read configs: %w", err))
 	}
 
-	db, err := database.New(context.Background(), &config.DB)
+	tableNames := []string{
+		"capability",
+		"classifier",
+		"classifier_class",
+		"classifier_instance",
+		"classifier_training_request",
+		"classifier_training_request_data",
+		"comment",
+		"comment_attr_gm",
+		"comment_attr_l1",
+		"comment_attr_nps",
+		"comment_attr_sg",
+		"comment_attr_yl",
+		"entity",
+		"evaluation_event",
+		"evaluation_score",
+		"flag_inferred",
+		"logs_contacted",
+		"logs_processed",
+		"nps_client",
+		"nps_page_sg",
+		"nps_response",
+		"nps_score",
+		"process_result",
+		"provider",
+		"role_capability",
+		"training_example",
+		"user",
+		"user_role",
+		"visitor_history",
+		"watchlist",
+		"watchlist_activity",
+		"watchlist_entity",
+		"watchlist_offer",
+		"watchlist_user",
+	}
+
+	dbSource, err := database.New(context.Background(), &configSource)
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to create DB: %w", err))
 	}
 
-	tx, err := db.Pool.Begin()
+	dbReceiver, err := database.New(context.Background(), &configReceiver)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to begin tx: %w", err))
-	}
-	defer tx.Rollback()
-
-	for _, name := range scriptOrder {
-		if _, err := tx.Exec(scriptsByName[name]); err != nil {
-			log.Fatal(fmt.Errorf("failed to exec %s script: %w", name, err))
-		}
+		log.Fatal(fmt.Errorf("failed to create DB: %w", err))
 	}
 
-	if err := tx.Commit(); err != nil {
-		log.Fatal(fmt.Errorf("failed to commit tx: %w", err))
-	}
-}
-
-func getAllParsedScripts(scriptNames []string, filler scriptTemplateConfig) (map[string]string, error) {
-	scriptsByName := make(map[string]string, len(scriptNames))
-	for _, name := range scriptNames {
-		script, err := getParsedScript(name, filler)
+	for _, name := range tableNames {
+		rows, err := dbSource.Pool.Query("SELECT * FROM ibm." + name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get parsed %s script: %w", name, err)
+			log.Fatal(fmt.Errorf("failed to query rows %s script: %w", name, err))
 		}
-		scriptsByName[name] = script
+		cols, err := rows.ColumnTypes()
+		fmt.Println(cols)
+		for rows.Next() {
+			fmt.Println(rows.Lastcols)
+			values := ""
+			for _, v := range rows.Lastcols{
+				values += fmt.Sprintf("'%v', ", v)
+			}
+			values = values[:len(values)-2]
+			//values := fmt.Sprintf("%#v", rows.Lastcols)
+			//values = values[15:len(values)-1]
+			////strings.ReplaceAll(values, "\"", "'")
+			//fmt.Println(values)
+			//lastcols := reflect.ValueOf(*rows).FieldByName("lastcols")
+			//fmt.Println(lastcols.([]driver.Value))
+			_, err = dbReceiver.Pool.Exec("INSERT INTO " + tenantID + "." + name + " VALUES(" + values + ")")
+			if err != nil {
+				log.Fatal(fmt.Errorf("failed to query rows %s script: %w", name, err))
+			}
+		}
+
 	}
 
-	return scriptsByName, nil
 }
