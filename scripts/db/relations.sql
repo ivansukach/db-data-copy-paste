@@ -59,6 +59,14 @@ ALTER TABLE {{.TenantID}}.nps_client
         ON UPDATE NO ACTION
         ON DELETE NO ACTION;
 
+ALTER TABLE {{.TenantID}}.nps_score
+    ADD CONSTRAINT nps_score_pkey PRIMARY KEY (source_id, provider_id);
+ALTER TABLE {{.TenantID}}.nps_score
+    ADD CONSTRAINT provider_and_source FOREIGN KEY (provider_id, source_id)
+    REFERENCES {{.TenantID}}.provider (provider_id, source_id) MATCH SIMPLE
+    ON UPDATE CASCADE
+       ON DELETE CASCADE;
+
 ALTER TABLE {{.TenantID}}.nps_response
     ADD CONSTRAINT nps_response_client_id_fkey FOREIGN KEY (client_id)
         REFERENCES {{.TenantID}}.nps_client (client_id) MATCH SIMPLE

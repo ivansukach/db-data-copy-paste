@@ -16,14 +16,14 @@ func main() {
 	}
 
 	scriptOrder := []string{
-		"role", // remove if role already exists
-		"schema",
-		"domains",
-		"functions",
-		"sequences",
-		"tables",
-		"table-data",
-		"views",
+		//"role", // remove if role already exists
+		//"schema",
+		//"domains",
+		//"functions",
+		//"sequences",
+		//"tables",
+		//"table-data",
+		//"views",
 		"relations",
 	}
 

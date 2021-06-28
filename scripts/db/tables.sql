@@ -225,7 +225,7 @@ GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE {{.TenantID}}.configuration TO {{.
 
 CREATE TABLE {{.TenantID}}.entity
 (
-    entity_id integer NOT NULL DEFAULT nextval('entity_entity_id_seq'::regclass),
+    entity_id integer NOT NULL DEFAULT nextval('{{.TenantID}}.entity_entity_id_seq'::regclass),
     type character varying COLLATE pg_catalog."default" NOT NULL,
     value character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT entity_pkey PRIMARY KEY (entity_id),
@@ -334,7 +334,7 @@ CREATE TABLE {{.TenantID}}.nps_response
 (
     response_id uuid NOT NULL DEFAULT public.uuid_generate_v1(),
     created timestamp with time zone NOT NULL DEFAULT now(),
-    score "nps score" NOT NULL,
+    score {{.TenantID}}."nps score" NOT NULL,
     client_id character varying(15) COLLATE pg_catalog."default" NOT NULL,
     comment text COLLATE pg_catalog."default" NOT NULL,
     location text COLLATE pg_catalog."default",
@@ -473,6 +473,7 @@ CREATE TABLE {{.TenantID}}."user"
     date_last_visit timestamp with time zone,
     date_first_visit timestamp with time zone,
     date_nps_submitted timestamp with time zone,
+    date_nps_dismissed timestamp with time zone,
     visits_number integer NOT NULL DEFAULT 0,
     CONSTRAINT user_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_notification_frequency_activity_check CHECK (notification_frequency_activity::text = ANY (ARRAY['daily'::character varying::text, 'weekly'::character varying::text, 'monthly'::character varying::text])) NOT VALID,
@@ -529,6 +530,31 @@ ALTER TABLE {{.TenantID}}.visitor_history
 GRANT ALL ON TABLE {{.TenantID}}.visitor_history TO {{.DBAdmin}};
 
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE {{.TenantID}}.visitor_history TO {{.DBUser}};
+
+CREATE TABLE {{.TenantID}}.nps_score
+(
+    source_id character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    promoters_count integer,
+    scores_count integer,
+    provider_id character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    detractors_count integer
+    )
+    WITH (
+        OIDS = FALSE
+        )
+    TABLESPACE pg_default;
+
+ALTER TABLE {{.TenantID}}.nps_score
+    OWNER to {{.DBAdmin}};
+
+CREATE UNIQUE INDEX fki_provider_and_source
+    ON {{.TenantID}}.nps_score USING btree
+    (source_id COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+GRANT ALL ON TABLE {{.TenantID}}.nps_score TO {{.DBAdmin}};
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE {{.TenantID}}.nps_score TO {{.DBUser}};
 
 CREATE TABLE {{.TenantID}}.watchlist
 (
@@ -636,7 +662,7 @@ CREATE TABLE {{.TenantID}}.comment_attr_gm
 (
     comment_id uuid NOT NULL,
     created timestamp with time zone NOT NULL DEFAULT now(),
-    score "nps score" NOT NULL,
+    score {{.TenantID}}."nps score" NOT NULL,
     band_level character varying(63) COLLATE pg_catalog."default" NOT NULL,
     business_unit character varying(15) COLLATE pg_catalog."default" NOT NULL,
     home_country character varying(31) COLLATE pg_catalog."default" NOT NULL,
@@ -666,7 +692,7 @@ CREATE TABLE {{.TenantID}}.comment_attr_l1
     comment_id uuid NOT NULL,
     created timestamp with time zone NOT NULL DEFAULT now(),
     activity_id character varying(63) COLLATE pg_catalog."default" NOT NULL,
-    score "nps score" NOT NULL,
+    score {{.TenantID}}."nps score" NOT NULL,
     offering_location text COLLATE pg_catalog."default",
     offering_id text COLLATE pg_catalog."default",
     CONSTRAINT comment_attr_l1_pkey PRIMARY KEY (comment_id)
@@ -687,7 +713,7 @@ CREATE TABLE {{.TenantID}}.comment_attr_nps
 (
     comment_id uuid NOT NULL,
     created timestamp with time zone NOT NULL DEFAULT now(),
-    score "nps score" NOT NULL,
+    score {{.TenantID}}."nps score" NOT NULL,
     referrer text COLLATE pg_catalog."default",
     CONSTRAINT comment_attr_nps_pkey PRIMARY KEY (comment_id)
 )
@@ -707,7 +733,7 @@ CREATE TABLE {{.TenantID}}.comment_attr_sg
 (
     comment_id uuid NOT NULL,
     created timestamp with time zone NOT NULL DEFAULT now(),
-    score "nps score" NOT NULL,
+    score {{.TenantID}}."nps score" NOT NULL,
     referer text COLLATE pg_catalog."default",
     CONSTRAINT comment_attr_sg_pkey PRIMARY KEY (comment_id)
 )
