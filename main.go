@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"github.com/ivansukach/db-data-copy-paste/database"
 	"log"
+	"time"
 )
 
-const tenantID = "ptech"
+const tenantID = "ibm"
 
 func main() {
 	configSource, err := readConfig(true)
@@ -21,40 +22,40 @@ func main() {
 	}
 
 	tableNames := []string{
-		"capability",
-		"classifier",
-		"classifier_class",
-		"classifier_instance",
-		"classifier_training_request",
-		"classifier_training_request_data",
-		"comment",
-		"comment_attr_gm",
-		"comment_attr_l1",
-		"comment_attr_nps",
-		"comment_attr_sg",
-		"comment_attr_yl",
-		"entity",
-		"evaluation_event",
-		"evaluation_score",
-		"flag_inferred",
-		"logs_contacted",
-		"logs_processed",
-		"nps_client",
-		"nps_page_sg",
-		"nps_response",
+		//"capability",
+		//"classifier",
+		//"classifier_class",
+		//"classifier_instance",
+		//"classifier_training_request",
+		//"classifier_training_request_data",
+		//"comment",
+		//"comment_attr_gm",
+		//"comment_attr_l1",
+		//"comment_attr_nps",
+		//"comment_attr_sg",
+		//"comment_attr_yl",
+		//"entity",
+		//"evaluation_event",
+		//"evaluation_score",
+		//"flag_inferred",
+		//"logs_contacted",
+		//"logs_processed",
+		//"nps_client",
+		//"nps_page_sg",
+		//"nps_response",
 		"nps_score",
-		"process_result",
-		"provider",
-		"role_capability",
-		"training_example",
-		"user",
-		"user_role",
-		"visitor_history",
-		"watchlist",
-		"watchlist_activity",
-		"watchlist_entity",
-		"watchlist_offer",
-		"watchlist_user",
+		//"process_result",
+		//"provider",
+		//"role_capability",
+		//"training_example",
+		//"user",
+		//"user_role",
+		//"visitor_history",
+		//"watchlist",
+		//"watchlist_activity",
+		//"watchlist_entity",
+		//"watchlist_offer",
+		//"watchlist_user",
 	}
 
 	dbSource, err := database.New(context.Background(), &configSource)
@@ -72,24 +73,33 @@ func main() {
 		if err != nil {
 			log.Fatal(fmt.Errorf("failed to query rows %s script: %w", name, err))
 		}
-		cols, err := rows.ColumnTypes()
-		fmt.Println(cols)
+		//cols, err := rows.ColumnTypes()
+		//fmt.Println(cols)
 		for rows.Next() {
-			fmt.Println(rows.Lastcols)
+			//fmt.Println(rows.Lastcols)
 			values := ""
-			for _, v := range rows.Lastcols{
-				values += fmt.Sprintf("'%v', ", v)
+			for _, lastcol := range rows.Lastcols {
+				switch columnValue := lastcol.(type) {
+				case []byte:
+					values += "'" + string(columnValue) + "', "
+				case time.Time:
+					values += "'" + columnValue.Format("2006-01-02 15:04:05.000+00") + "', "
+					fmt.Println(columnValue)
+				default:
+					values += fmt.Sprintf("'%v', ", lastcol)
+				}
 			}
 			values = values[:len(values)-2]
-			//values := fmt.Sprintf("%#v", rows.Lastcols)
-			//values = values[15:len(values)-1]
-			////strings.ReplaceAll(values, "\"", "'")
-			//fmt.Println(values)
-			//lastcols := reflect.ValueOf(*rows).FieldByName("lastcols")
-			//fmt.Println(lastcols.([]driver.Value))
+			//	//values := fmt.Sprintf("%#v", rows.Lastcols)
+			//	//values = values[15:len(values)-1]
+			//	////strings.ReplaceAll(values, "\"", "'")
+			//	//fmt.Println(values)
+			//	//lastcols := reflect.ValueOf(*rows).FieldByName("lastcols")
+			//	//fmt.Println(lastcols.([]driver.Value))
 			_, err = dbReceiver.Pool.Exec("INSERT INTO " + tenantID + "." + name + " VALUES(" + values + ")")
 			if err != nil {
-				log.Fatal(fmt.Errorf("failed to query rows %s script: %w", name, err))
+				log.Println(fmt.Errorf("failed to query rows %s script: %w", name, err))
+				//break
 			}
 		}
 

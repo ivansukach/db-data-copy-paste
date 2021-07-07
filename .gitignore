@@ -5,7 +5,7 @@
 # testing
 /coverage
 
-root.crt
+configs/root.crt
 vcap-local.json
 config.json
 
